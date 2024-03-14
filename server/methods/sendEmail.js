@@ -18,7 +18,7 @@
         from: 'curtistest652@gmail.com',
         to: 'curtistest652@gmail.com',
         subject: 'Multiple Workbook PDF Exports Attached to One Email',
-        text: 'Hey Lindsey, hope this message finds you well! Please find the attached PDFs and let me know whether or not this is what you had in mind!',
+        text: 'Hey Curtis, hope this message finds you well! Please find the attached PDFs and let me know whether or not this is what you had in mind!',
         attachments: []
     };
    
