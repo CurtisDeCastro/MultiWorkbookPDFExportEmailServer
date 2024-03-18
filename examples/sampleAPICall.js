@@ -3,7 +3,7 @@ var fs = require('fs');
 
 var options = {
   'method': 'POST',
-  'hostname': 'localhost',
+  'hostname': 'My Server URL',
   'port': 3000,
   'path': '/Multi-Workbook-Email-Export-PDF',
   'headers': {
