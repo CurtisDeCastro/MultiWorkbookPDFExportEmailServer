@@ -12,7 +12,7 @@ const client_secret = process.env.SIGMA_CLIENT_SECRET;
 const baseURL = process.env.SIGMA_URL;
 
 app.post('/Multi-Workbook-Email-Export-PDF', async (req, res) => {
-
+  console.log(req.body);
   try {
     clearDirectory();
     await SingleEmailMultiWorkbookExport(baseURL, client_id, client_secret, req.body);
