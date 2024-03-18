@@ -12,14 +12,14 @@ const client_secret = process.env.SIGMA_CLIENT_SECRET;
 const baseURL = process.env.SIGMA_URL;
 
 app.post('/Multi-Workbook-Email-Export-PDF', async (req, res) => {
-  console.log()
+
   try {
     clearDirectory();
     await SingleEmailMultiWorkbookExport(baseURL, client_id, client_secret, req.body);
-    res.status(200).send('Main function executed successfully');
+    res.status(200).send('Sigma Exports Initiated');
   } catch (error) {
     console.error(error);
-    res.status(500).send('An error occurred while executing the Main function');
+    res.status(500).send('An error occurred while initiating the exports');
   }
 });
 

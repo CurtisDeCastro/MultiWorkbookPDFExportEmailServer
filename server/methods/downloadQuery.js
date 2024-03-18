@@ -33,11 +33,6 @@ async function downloadQuery(baseURL, queryId, token) {
     } catch (error) {
         console.error(error);
     }
-    
-    
-    var postData = qs.stringify({
-    
-    });
 
 }
 

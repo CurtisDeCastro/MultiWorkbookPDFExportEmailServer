@@ -1,6 +1,8 @@
+// Below is a sample array of objects that can be used to export multiple workbooks as PDFs though this endpoint. The commented out lines represent optional parameters.
+
 const exportExportWorkbookArray = [
   {
-    id: "4SGTaDOau8qaCTKRVTbSJs",
+    id: "sdagert43sgagdt3er34s",
     export_config: {
       // elementId: "88889999-aaaa-bbbb-cccc-ddddeeeeffff",
       format: {
@@ -21,7 +23,7 @@ const exportExportWorkbookArray = [
     },
   },
   {
-    id: "6PWlWzy4nXIYsvJbHPT5Go",
+    id: "sdagert43sga346523tgrgt3",
     export_config: {
       format: {
         type: "pdf",

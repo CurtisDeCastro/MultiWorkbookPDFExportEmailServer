@@ -1,0 +1,6 @@
+SIGMA_URL = <https://aws-api.sigmacomputing.com for AWS hosted orgs, and https://api.sigmacomputing.com for GCP>
+SIGMA_CLIENT_ID = <Client ID Goes Here>
+SIGMA_CLIENT_SECRET = <Client Secret Goes Here>
+GMAIL_APPLICATION_PASSWORD = <Only necessary if using Gmail as email processor. Custom handling for sendEmail.js is likely preferred by your org>
+FROM_EMAIL = <email address from which messages are sent>
+

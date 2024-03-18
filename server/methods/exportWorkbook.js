@@ -2,20 +2,20 @@ const axios = require('axios');
 const downloadQuery = require('./downloadQuery.js')
 
 //export workbook
-const exportWorkbook = async (exportWorkbookObj, baseURL, token) => {
+const exportWorkbook = async (workbookData, baseURL, token) => {
   
-  let data = JSON.stringify(exportWorkbookObj.export_config);
+  let data = JSON.stringify(workbookData.export_config);
   
   let config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `${baseURL}/v2/workbooks/${exportWorkbookObj.id}/export`,
+    url: `${baseURL}/v2/workbooks/${workbookData.id}/export`,
     headers: { 
       'Content-Type': 'application/json', 
       'Accept': 'application/json', 
       'Authorization': `Bearer ${token}`
     },
-    data : data
+    data: data,
   };
   
   axios.request(config)
