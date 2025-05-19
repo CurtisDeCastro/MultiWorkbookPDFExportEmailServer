@@ -1,15 +1,15 @@
 
 # How This Server Works
 
-This server automates the process of exporting multiple Sigma workbooks as PDFs and emailing them as attachments. Below is a step-by-step overview of how it operates:
+This server automates exporting multiple Sigma workbooks as PDFs and emailing them as attachments. The workflow and data structure have recently changed—please read carefully for the latest usage.
 
 ---
 
 ## 1. Server Setup
 
 - **Built with:** Node.js and Express.
-- **Endpoint:** Listens for HTTP `POST` requests at `/Multi-Workbook-Email-Export-PDF`.
-- **Configuration:** Uses environment variables for API credentials, email addresses, and other settings.
+- **Endpoint:** Accepts HTTP `POST` requests at `/Multi-Workbook-Email-Export-PDF`.
+- **Configuration:** Uses environment variables for Sigma API credentials, Gmail credentials, and sender email.
 
 ---
 
@@ -17,62 +17,108 @@ This server automates the process of exporting multiple Sigma workbooks as PDFs 
 
 When a `POST` request is received at `/Multi-Workbook-Email-Export-PDF`:
 
-- Logs the request body (should be an array of workbooks to export).
-- Clears the `./PDFs` directory to remove any old exports.
-- Calls the main process: `SingleEmailMultiWorkbookExport`.
+- The server expects the request body to contain both email options and a list of workbooks to export, in a specific structure (see below).
+- The server clears the `./PDFs` directory to remove any old exports.
+- The main process (`SingleEmailMultiWorkbookExport`) is called with the parsed email options and workbook list.
+
+**Accepted Request Body Formats:**
+
+1. **Preferred:**  
+   A JSON array with two elements:
+   - The first element is an object with email options.
+   - The second element is an array of workbook export objects.
+
+   Example:
+   ```json
+   [
+     {
+       "send_to": ["user1@example.com", "user2@example.com"],
+       "subject": "Sigma PDF Export",
+       "text": "Here are your requested Sigma exports."
+     },
+     [
+       {
+         "elementId": "workbook_id_1",
+         "export_config": {
+           "format": {
+             "layout": "portrait",
+             "type": "pdf"
+           }
+         },
+         "id": "export_id_1"
+       },
+       {
+         "elementId": "workbook_id_2",
+         "export_config": {
+           "format": {
+             "layout": "portrait",
+             "type": "pdf"
+           }
+         },
+         "id": "export_id_2"
+       }
+     ]
+   ]
+   ```
+
+2. **Legacy:**  
+   An array where the first element is the email options object, and the remaining elements are workbook export objects.
+
+3. **Payload String:**  
+   An object with a `payload` property containing a stringified JSON array as above.  
+   (If using this, make sure to parse the string before sending, or the server will parse it for you.)
 
 ---
 
 ## 3. Export Process (`SingleEmailMultiWorkbookExport`)
 
-- **Authentication:** Obtains an access token from the Sigma API using client credentials.
-- **Exporting Workbooks:** For each workbook in the request:
-  - Calls `exportWorkbook`, which sends an export request to the Sigma API.
-  - When the export is ready, triggers `downloadQuery` to download the PDF file to the `./PDFs` directory.
-- **Progress Monitoring:** Every second, checks how many PDFs are in the `./PDFs` directory.
-  - When the number of PDFs matches the number of requested exports, stops checking and calls `sendEmail`.
+- **Authentication:** Gets an access token from the Sigma API using credentials.
+- **Exporting Workbooks:** For each workbook in the provided array:
+  - Calls `exportWorkbook` to initiate the export via the Sigma API.
+  - When the export is ready, downloads the PDF to the `./PDFs` directory.
+- **Progress Monitoring:** Every second, checks the number of PDFs in `./PDFs`.
+  - When the number matches the number of requested exports, stops polling and calls `sendEmail`.
 
 ---
 
-## 4. Downloading PDFs (`downloadQuery`)
+## 4. Downloading PDFs
 
-- Downloads the exported PDF for each workbook.
-- If the export isn't ready (HTTP 204), retries after 1 second.
-- Saves each PDF with a unique timestamped filename in `./PDFs`.
+- Each exported PDF is downloaded and saved with a unique filename in `./PDFs`.
+- If the export is not ready (HTTP 204), the server retries after 1 second.
 
 ---
 
 ## 5. Sending Email (`sendEmail`)
 
-- Uses Nodemailer to send an email (via Gmail) with all PDFs in `./PDFs` as attachments.
-- The sender and recipient are both set from the environment variable `FROM_EMAIL`.
-- After sending the email, clears the `./PDFs` directory again.
+- Uses Nodemailer (Gmail) to send an email with all PDFs in `./PDFs` as attachments.
+- The sender is set from the `FROM_EMAIL` environment variable.
+- Recipients are set from the `send_to` array in the email options object.
+- After sending, the `./PDFs` directory is cleared.
 
 ---
 
 ## 6. Directory Management (`clearDirectory`)
 
-- Deletes all files in the `./PDFs` directory to ensure no old files are mixed with new exports.
+- Deletes all files in the `./PDFs` directory before and after each export/email cycle to prevent mixing old and new files.
 
 ---
 
 ## Summary
 
-- **Purpose:** Accepts a list of Sigma workbooks, exports each as a PDF, and emails all PDFs as attachments.
+- **Purpose:** Accepts email options and a list of Sigma workbooks, exports each as a PDF, and emails all PDFs as attachments.
 - **Flow:**  
   Receive request → Clear old PDFs → Export each workbook → Download PDFs → Email PDFs → Clean up.
 - **Tech Stack:** Node.js, Express, Axios, Nodemailer, Sigma API.
 
 ---
 
-
 ## Testing the API with Postman
 
-You can easily test the `/Multi-Workbook-Email-Export-PDF` endpoint using the Postman desktop client. Follow these steps:
+You can test the `/Multi-Workbook-Email-Export-PDF` endpoint using Postman. Here’s how:
 
 ### 1. Start Your Server
 
-Make sure your Node.js server is running locally (by default, it listens on port `3000`).
+Ensure your Node.js server is running locally (default port: `3000`).
 
 ### 2. Open Postman and Create a New Request
 
@@ -80,44 +126,49 @@ Make sure your Node.js server is running locally (by default, it listens on port
 
 ### 3. Set the Request Type and URL
 
-- Change the request type to `POST`.
-- Set the URL to:  
+- Set the method to `POST`.
+- URL:  
   ```
   http://localhost:3000/Multi-Workbook-Email-Export-PDF
   ```
 
 ### 4. Set the Headers
 
-- Go to the **Headers** tab.
-- Add a header:  
+- In the **Headers** tab, add:  
   | Key           | Value             |
   |---------------|-------------------|
   | Content-Type  | application/json  |
 
 ### 5. Set the Request Body
 
-- Go to the **Body** tab.
-- Select **raw** and choose **JSON** from the dropdown.
-- Enter a JSON array representing the workbooks you want to export.  
+- In the **Body** tab, select **raw** and choose **JSON**.
+- Enter a JSON array with two elements:  
+  1. Email options object  
+  2. Array of workbook export objects
+
   Example:
   ```json
   [
     {
-      "id": "workbook_id_1",
-      "export_config": {
-        "format": "pdf",
-        "other_config_option": "value"
-      }
+      "send_to": ["your@email.com"],
+      "subject": "Sigma PDF Export",
+      "text": "Here are your requested Sigma exports."
     },
-    {
-      "id": "workbook_id_2",
-      "export_config": {
-        "format": "pdf"
+    [
+      {
+        "elementId": "workbook_id_1",
+        "export_config": {
+          "format": {
+            "layout": "portrait",
+            "type": "pdf"
+          }
+        },
+        "id": "export_id_1"
       }
-    }
+    ]
   ]
   ```
-  Replace `"workbook_id_1"`, `"workbook_id_2"`, and the config options with real values as required by your Sigma API.
+  Replace the IDs and email addresses with your actual values.
 
 ### 6. Send the Request
 
@@ -130,7 +181,7 @@ Make sure your Node.js server is running locally (by default, it listens on port
 
 ### 7. Check Your Email
 
-- If everything is set up correctly (including your `.env` file and Gmail app password), you should receive an email with the exported PDFs attached once the process completes.
+- If everything is configured correctly (including your `.env` file and Gmail app password), you should receive an email with the exported PDFs attached once the process completes.
 
 ---
 
@@ -145,9 +196,9 @@ Make sure your Node.js server is running locally (by default, it listens on port
 
 ---
 
-**Tip:**  
-If you get errors, check your server logs for details. Make sure your `.env` file is set up with the correct Sigma and Gmail credentials.
+**Tips:**  
+- If you get errors, check your server logs for details.
+- Make sure your `.env` file is set up with the correct Sigma and Gmail credentials.
+- If you have a "payload" string from another system, parse it to a JSON array before sending, or send as `{ "payload": "<stringified array>" }`.
 
-Let us know if you need a sample `.env` or help with the request body!
-
-
+Need a sample `.env` or help with the request body? Let us know!
