@@ -3,7 +3,7 @@ const getToken = require("../methods/getToken.js");
 const exportWorkbook = require("../methods/exportWorkbook.js");
 const sendEmail = require("../methods/sendEmail.js");
 
-async function SingleEmailMultiWorkbookExport(baseURL, client_id, client_secret, exportWorkbooksArr) {
+async function SingleEmailMultiWorkbookExport(baseURL, client_id, client_secret, exportWorkbooksArr, emailOptions) {
     let token = await getToken(baseURL, client_id, client_secret);
     let exportCount = exportWorkbooksArr.length;
     
@@ -15,7 +15,7 @@ async function SingleEmailMultiWorkbookExport(baseURL, client_id, client_secret,
       }
       if (completed === exportCount) {
         clearInterval(interval);
-        sendEmail();
+        sendEmail(emailOptions);
       }
     }, 1000);
   
